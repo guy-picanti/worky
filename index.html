@@ -442,7 +442,7 @@ h2{font-family:var(--display);font-size:13px;letter-spacing:.14em;text-transform
           <select class="inp" id="voicePick" aria-label="Voice"></select>
           <div class="row2"><span>Slower</span><input type="range" id="voiceRate" min="0.8" max="1.4" step="0.05" value="1.1" aria-label="Speaking speed"><span>Faster</span></div>
           <button class="btn" id="voiceTest" type="button">Test voice</button>
-          <p class="note" style="margin:0">For a much more natural voice, download a free Premium voice: iPhone Settings → Accessibility → Read &amp; Speak (Spoken Content) → Voices → English → pick <b>Ava</b>, <b>Zoe</b> or <b>Evan (Premium)</b>. Then reopen Worky and choose it here.</p>
+          <p class="note" style="margin:0"><b>Worky voice</b> is recorded into the app, so it plays even with Silent mode on. If you pick an iPhone voice instead: download a free Premium one first, iPhone Settings → Accessibility → Read &amp; Speak (Spoken Content) → Voices → English → pick <b>Ava</b>, <b>Zoe</b> or <b>Evan (Premium)</b>. Then reopen Worky and choose it here.</p>
         </div>
       </div>
       <div class="card">
@@ -533,7 +533,7 @@ const CHALLENGES=[
   {id:"custom",label:"Custom",ex:null,start:10,inc:1}];
 
 /* ============ version + updates ============ */
-const APP_VERSION="1.4.0";
+const APP_VERSION="1.5.0";
 async function latestVersion(){
   const r=await fetch("./?check="+Date.now(),{cache:"no-store"});if(!r.ok)throw new Error("HTTP "+r.status);
   const m=(await r.text()).match(/const APP_VERSION="([^"]+)"/);return m?m[1]:null;
@@ -622,20 +622,76 @@ function voiceScore(v){const n=v.name;let s=0;if(/premium/i.test(n))s+=100;else 
   return s}
 function loadVoices(){try{VOICES=speechSynthesis.getVoices().filter(v=>/^en/i.test(v.lang)).sort((a,b)=>voiceScore(b)-voiceScore(a))}catch(e){VOICES=[]}if(S.tab==="set")renderVoicePick()}
 try{speechSynthesis.onvoiceschanged=loadVoices}catch(e){}
-function pickVoice(){if(!VOICES.length)loadVoices();return VOICES.find(v=>v.name===S.prefs.voiceName)||VOICES[0]||null}
-/* iPhone Safari quirks: speech started right after cancel() is dropped, and an utterance can be garbage-collected before it plays.
-   So: keep a reference, only cancel when something is speaking, and wait a beat after cancelling. */
+/* ===== Voice =====
+   Main voice: Worky's own recorded clips (numbers 0-200 + common phrases), played as normal audio.
+   That plays in Silent mode and doesn't depend on the phone's speech engine. Anything without a clip
+   (exercise names, times) falls back to the phone's voice. */
+const WORKY_VOICE="__worky";
+let CLIPS={},CLIP_URL={};
+const PLAYER=new Audio();PLAYER.preload="auto";PLAYER.setAttribute("playsinline","");
+try{if(navigator.audioSession)navigator.audioSession.type="playback"}catch(e){}
+fetch("voice/manifest.json").then(r=>r.json()).then(m=>{CLIPS=m;preloadClips()}).catch(()=>{});
+async function preloadClips(){ // keep clips in memory so counting is instant, even offline
+  const keys=Object.keys(CLIPS).sort((x,y)=>(/^\d+$/.test(x)?+x:999)-(/^\d+$/.test(y)?+y:999));
+  for(const k of keys){const slug=CLIPS[k];if(CLIP_URL[slug])continue;
+    try{const b=await (await fetch("voice/"+slug+".m4a")).blob();CLIP_URL[slug]=URL.createObjectURL(b)}catch(e){}}
+}
+const useWorkyVoice=()=>!S.prefs.voiceName||S.prefs.voiceName===WORKY_VOICE;
+function pickVoice(){if(!VOICES.length)loadVoices();return useWorkyVoice()?null:(VOICES.find(v=>v.name===S.prefs.voiceName)||null)}
+function toParts(text){
+  const out=[];
+  String(text).toLowerCase().replace(/[!?]/g,".").split(/[.,;]\s*/).map(x=>x.trim()).filter(Boolean).forEach(seg=>{
+    if(useWorkyVoice()){
+      if(CLIPS[seg]){out.push({clip:CLIPS[seg]});return}
+      let m=seg.match(/^(.+?) (\d+)$/);if(m&&CLIPS[m[1]]&&CLIPS[m[2]]){out.push({clip:CLIPS[m[1]]},{clip:CLIPS[m[2]]});return}
+      m=seg.match(/^(\d+) (seconds|minutes|minute) left$/);if(m&&CLIPS[m[1]]&&CLIPS[m[2]]){out.push({clip:CLIPS[m[1]]},{clip:CLIPS[m[2]]});return}
+    }
+    out.push({tts:seg});
+  });
+  return out;
+}
+let QUEUE=[],qToken=0,speaking=false;
 const LIVE=[];
-function say(t){lastSpoke=Date.now();if(!S.voice)return;
-  try{const ss=window.speechSynthesis;if(!ss){beep();return}
-    const u=new SpeechSynthesisUtterance(String(t)),v=pickVoice();if(v){u.voice=v;u.lang=v.lang}else u.lang="en-US";
+function say(t){
+  lastSpoke=Date.now();if(!S.voice)return;
+  if(recOn&&rec){try{rec.abort()}catch(e){}}
+  qToken++;QUEUE=toParts(t);
+  try{PLAYER.pause()}catch(e){}
+  try{if(speechSynthesis.speaking||speechSynthesis.pending)speechSynthesis.cancel()}catch(e){}
+  playNext(qToken,true);
+}
+function playNext(tok,first){
+  if(tok!==qToken)return;
+  const it=QUEUE.shift();if(!it){speaking=false;lastSpoke=Date.now();return}
+  speaking=true;lastSpoke=Date.now();
+  if(it.clip){
+    PLAYER.onended=()=>playNext(tok);PLAYER.onerror=()=>{QUEUE.unshift({tts:keyOf(it.clip)});playNext(tok)};
+    PLAYER.src=CLIP_URL[it.clip]||("voice/"+it.clip+".m4a");PLAYER.playbackRate=Math.max(.8,Math.min(1.4,(S.prefs.voiceRate||1.1)/1.1));
+    const p=PLAYER.play();if(p&&p.catch)p.catch(()=>{if(tok!==qToken)return;QUEUE.unshift({tts:keyOf(it.clip)});playNext(tok)});
+  }else speakTTS(it.tts,()=>playNext(tok),!first);
+}
+const keyOf=slug=>Object.keys(CLIPS).find(k=>CLIPS[k]===slug)||slug.replace(/-/g," ");
+function speakTTS(text,done,delay){
+  try{const ss=window.speechSynthesis;if(!ss){done();return}
+    const u=new SpeechSynthesisUtterance(text),v=pickVoice();if(v){u.voice=v;u.lang=v.lang}else u.lang="en-US";
     u.rate=S.prefs.voiceRate||1.1;u.pitch=1;u.volume=1;
-    u.onend=u.onerror=()=>{lastSpoke=Date.now();const i=LIVE.indexOf(u);if(i>=0)LIVE.splice(i,1)};
+    let fin=false;const end=()=>{if(fin)return;fin=true;const i=LIVE.indexOf(u);if(i>=0)LIVE.splice(i,1);done()};
+    u.onend=end;u.onerror=end;setTimeout(end,Math.max(2500,text.length*120)); // never let a stuck utterance block the queue
     LIVE.push(u);if(LIVE.length>5)LIVE.shift();
-    if(ss.speaking||ss.pending){ss.cancel();setTimeout(()=>{ss.resume();ss.speak(u)},90)}
-    else{ss.resume();ss.speak(u)}
-  }catch(e){beep()}}
-function unlockAudio(){try{if(!speechSynthesis.speaking){const u=new SpeechSynthesisUtterance(" ");u.volume=0;LIVE.push(u);speechSynthesis.speak(u)}}catch(e){}beep(660,.01)}
+    const go=()=>{ss.resume();ss.speak(u)};
+    if(delay||ss.speaking||ss.pending){setTimeout(go,90)}else go();
+  }catch(e){done()}
+}
+let audioUnlocked=false;
+function unlockAudio(){
+  if(!audioUnlocked){audioUnlocked=true;
+    try{PLAYER.muted=true;PLAYER.src=CLIP_URL[CLIPS["go"]]||"voice/go.m4a";const p=PLAYER.play();const back=()=>{PLAYER.pause();PLAYER.muted=false};if(p&&p.then)p.then(back,()=>{PLAYER.muted=false;audioUnlocked=false});else back()}catch(e){PLAYER.muted=false}
+    try{const u=new SpeechSynthesisUtterance(" ");u.volume=0;LIVE.push(u);speechSynthesis.speak(u)}catch(e){}
+  }
+  beep(660,.01);
+}
+document.addEventListener("touchend",unlockAudio,{once:true,passive:true});
+document.addEventListener("click",unlockAudio,{once:true});
 const spokenTime=s=>{const m=Math.floor(s/60),r=s%60;return (m?m+(m===1?" minute":" minutes"):"")+(m&&r?" ":"")+(r||!m?r+" seconds":"")};
 
 /* ============ rep detection ============ */
@@ -1019,19 +1075,32 @@ function showMsg(t){$("msg").hidden=!t;$("msgText").textContent=t}
 
 /* ============ voice commands ============ */
 let rec=null,recOn=false;
+/* Voice commands. iPhone Safari ends recognition every few seconds; restart gently (1 s), give up after
+   repeated failures, and never let it block the screen. Tapping Mic always turns it off. */
+let recFails=0,recTimer=0;
+function stopMic(msg){recOn=false;clearTimeout(recTimer);if(rec){try{rec.onend=null;rec.onerror=null;rec.onresult=null;rec.abort()}catch(e){}}rec=null;renderMic();if(msg)toast(msg)}
+function startRec(){
+  if(!recOn||rec)return;
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return;
+  const r=new SR();rec=r;r.lang="en-US";r.continuous=false;r.interimResults=false;r.maxAlternatives=1;
+  r.onresult=e=>{recFails=0;const x=e.results[e.results.length-1];if(x&&x[0])handleCmd(x[0].transcript.toLowerCase())};
+  r.onerror=e=>{if(e.error==="not-allowed"||e.error==="service-not-allowed"){stopMic("Microphone blocked. Allow it in iPhone Settings → Apps → Safari.");return}
+    if(e.error!=="no-speech"&&e.error!=="aborted")recFails++};
+  r.onend=()=>{if(rec===r)rec=null;if(!recOn)return;
+    if(recFails>=4){stopMic("Voice commands stopped. Tap Mic to try again.");return}
+    recTimer=setTimeout(startRec,speaking?1500:1000)};
+  try{r.start()}catch(e){rec=null;recFails++;if(recOn)recTimer=setTimeout(startRec,1500)}
+}
 function toggleMic(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(recOn){stopMic("Voice commands off");return}
   if(!SR){toast("Voice commands aren't supported in this browser");return}
-  if(recOn){recOn=false;try{rec.stop()}catch(e){};renderMic();toast("Voice commands off");return}
-  rec=new SR();rec.lang="en-US";rec.continuous=true;rec.interimResults=false;
-  rec.onresult=e=>{const r=e.results[e.results.length-1];if(!r.isFinal)return;handleCmd(r[0].transcript.toLowerCase())};
-  rec.onend=()=>{if(recOn)setTimeout(()=>{try{rec.start()}catch(e){}},300)};
-  rec.onerror=e=>{if(e.error==="not-allowed"||e.error==="service-not-allowed"){recOn=false;renderMic();toast("Microphone blocked. Allow it in iPhone Settings → Apps → Safari.")}};
-  recOn=true;try{rec.start()}catch(e){}renderMic();unlockAudio();
+  recOn=true;recFails=0;renderMic();unlockAudio();startRec();
   toast("Listening: start, save, rest, skip, pause, next");
 }
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState!=="visible"&&recOn)stopMic()});
 function handleCmd(t){
-  if(speechSynthesis.speaking||Date.now()-lastSpoke<700)return; // ignore Worky's own voice
+  if(speaking||speechSynthesis.speaking||Date.now()-lastSpoke<700)return; // ignore Worky's own voice
   const e=cur(),has=w=>new RegExp("\\b"+w+"\\b").test(t);
   if(has("save")){if(e.kind==="time"){if(TM.running)finishTimer(false);saveTime("")}else saveSet()}
   else if(has("next"))nextExercise();
@@ -1616,7 +1685,9 @@ function renderBaseOptions(){
   $("baseText").textContent=kind==="reps"?"Camera counts it like":"Camera checks the position like";
 }
 function renderVoicePick(){const sel=$("voicePick");if(!sel)return;const cur=pickVoice();
-  sel.innerHTML=VOICES.length?VOICES.map(v=>`<option value="${esc(v.name)}" ${cur&&v.name===cur.name?"selected":""}>${esc(v.name)}${/premium|enhanced|siri/i.test(v.name)?"":" "}</option>`).join(""):`<option>Default voice</option>`;
+  const w=useWorkyVoice();
+  sel.innerHTML=`<option value="${WORKY_VOICE}" ${w?"selected":""}>Worky voice (recommended, works in Silent mode)</option>`+
+    VOICES.map(v=>`<option value="${esc(v.name)}" ${!w&&cur&&v.name===cur.name?"selected":""}>iPhone voice: ${esc(v.name)}</option>`).join("");
   $("voiceRate").value=S.prefs.voiceRate||1.1}
 function renderSettings(){renderVoicePick();$("cdVal").textContent=S.prefs.countdown?S.prefs.countdown+"s":"Off";$("autoRest").setAttribute("aria-checked",!!S.prefs.autoRest);$("verNow").textContent="Version "+APP_VERSION;
   $("voiceDefault").setAttribute("aria-checked",S.prefs.voice);$("frontDefault").setAttribute("aria-checked",S.prefs.front);$("cuesToggle").setAttribute("aria-checked",S.prefs.cues);
@@ -1738,10 +1809,10 @@ $("customList").addEventListener("click",e=>{const b=e.target.closest("button");
   else if(b.dataset.cdel){const k=b.dataset.cdel;S.prefs.custom=S.prefs.custom.filter(c=>c.key!==k);S.prefs.workouts.forEach(w=>{w.steps=w.steps.filter(x=>x.ex!==k)});delete S.prefs.goals.daily[k];
     if(S.prefs.ex===k)S.prefs.ex="pushup";S.confirmCustom=null;persist();toast("Exercise removed. Its history is kept.")}
   renderSettings()});
-$("voicePick").onchange=e=>{S.prefs.voiceName=e.target.value;persist();const was=S.voice;S.voice=true;say("Hi, I'm your Worky coach. 12. New record!");S.voice=was};
+$("voicePick").onchange=e=>{S.prefs.voiceName=e.target.value;persist();unlockAudio();const was=S.voice;S.voice=true;say("Get ready. 3. 2. 1. Go. 12. New record");S.voice=was};
 $("voiceRate").oninput=e=>{S.prefs.voiceRate=+e.target.value;persist()};
-$("voiceTest").onclick=()=>{loadVoices();const was=S.voice;S.voice=true;say("3, 2, 1, go. 10. 11. 12. New record!");S.voice=was;
-  setTimeout(()=>{if(!speechSynthesis.speaking&&!speechSynthesis.pending)toast("No sound? Turn off Silent mode and turn the volume up")},1200)};
+$("voiceTest").onclick=()=>{loadVoices();unlockAudio();const was=S.voice;S.voice=true;say("Get ready. 3. 2. 1. Go. 10. 11. 12. New record");S.voice=was;
+  setTimeout(()=>{if(!speaking&&PLAYER.paused&&!speechSynthesis.speaking)toast("No sound? Turn the volume up, and check Settings → Sounds")},1500)};
 const CDS=[0,3,5,10,15];
 $("cdDown").onclick=()=>{const i=CDS.indexOf(S.prefs.countdown);S.prefs.countdown=CDS[Math.max(0,(i<0?2:i)-1)];persist();renderSettings()};
 $("cdUp").onclick=()=>{const i=CDS.indexOf(S.prefs.countdown);S.prefs.countdown=CDS[Math.min(CDS.length-1,(i<0?2:i)+1)];persist();renderSettings()};
