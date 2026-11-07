@@ -58,9 +58,9 @@ select.exsel{width:100%;border:1.5px solid var(--line);background:var(--surface)
 .count.bump{animation:bump .2s ease-out}
 @keyframes bump{from{transform:scale(1.18)}to{transform:scale(1)}}
 @media (prefers-reduced-motion:reduce){.count.bump{animation:none}}
-.badge{position:absolute;top:14px;left:14px;display:flex;flex-direction:column;gap:4px;font-family:var(--display);font-size:17px;letter-spacing:.05em;
+.badge{position:absolute;top:56px;left:14px;display:flex;flex-direction:column;gap:4px;font-family:var(--display);font-size:17px;letter-spacing:.05em;
   text-shadow:0 1px 8px rgba(0,0,0,.7);font-variant-numeric:tabular-nums;pointer-events:none}
-.msg{position:absolute;left:12px;right:12px;bottom:46px;text-align:center;font-weight:600;font-size:15px;pointer-events:none}
+.msg{position:absolute;left:12px;right:12px;bottom:100px;text-align:center;font-weight:600;font-size:15px;pointer-events:none}
 .msg span{background:rgba(0,0,0,.6);padding:6px 12px;border-radius:999px;display:inline-block}
 .meter{position:absolute;left:14px;right:14px;bottom:14px;height:16px;border-radius:8px;background:rgba(255,255,255,.18);overflow:hidden}
 .meter i{position:absolute;top:0;bottom:0;width:2px;background:#fff;opacity:.85}
@@ -68,7 +68,7 @@ select.exsel{width:100%;border:1.5px solid var(--line);background:var(--surface)
 .startcard{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center}
 .startcard p{margin:0;opacity:.75;line-height:1.45;max-width:30ch}
 .big{border:0;border-radius:18px;padding:16px 28px;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:18px}
-.stagebtns{position:absolute;top:12px;left:50%;transform:translateX(-50%);display:flex;gap:8px}
+.stagebtns{position:absolute;top:12px;left:12px;display:flex;gap:6px;z-index:2}
 .ghost{border:0;border-radius:12px;padding:7px 11px;background:rgba(0,0,0,.5);color:#fff;font-weight:600;font-size:14px}
 
 .row2{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--muted)}
@@ -172,6 +172,26 @@ h2{font-family:var(--display);font-size:13px;letter-spacing:.14em;text-transform
 .infoline b{color:var(--ink);font-weight:800}
 .updbar{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--teal);color:#0b1630;border-radius:14px;padding:9px 12px;font-weight:700;font-size:14px}
 .updbar button{border:0;border-radius:10px;padding:7px 12px;background:#0b1630;color:#fff;font-weight:800;font-size:13px}
+.phasepill{display:inline-flex;align-items:center;gap:6px;background:rgba(0,0,0,.55);border-radius:999px;padding:4px 10px;font-size:13px;letter-spacing:.08em;font-weight:800;align-self:flex-start}
+.phasepill i{width:9px;height:9px;border-radius:50%;background:#a9a4c8;display:inline-block}
+.phasepill.on i{background:#ed1943;box-shadow:0 0 0 3px rgba(237,25,67,.35)}
+.phasepill.rd i{background:#44c1c0}
+.actbar{position:absolute;left:12px;right:12px;bottom:40px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;z-index:2}
+.actbar button{border:0;border-radius:14px;padding:11px 18px;font-weight:800;font-size:15px;background:rgba(255,255,255,.16);color:#fff}
+.actbar button.go{background:var(--accent);color:#fff;padding:12px 26px;font-size:16px}
+.actbar button.teal{background:var(--teal);color:#0b1630}
+.readynum{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;z-index:1}
+.readynum span{font-family:var(--display);font-weight:900;font-size:min(46vw,220px);line-height:1;color:#fff;text-shadow:0 4px 30px rgba(0,0,0,.6)}
+.readynum small{position:absolute;top:22%;font-size:13px;font-weight:800;letter-spacing:.2em;color:#fff;opacity:.85}
+.restpanel{position:absolute;inset:0;z-index:3;background:rgba(10,6,36,.92);color:#f7f6ee;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px;text-align:center}
+.restpanel small{font-size:12px;font-weight:800;letter-spacing:.2em;opacity:.75}
+.restpanel .rt{font-family:var(--display);font-weight:900;font-size:min(26vw,120px);line-height:1;font-variant-numeric:tabular-nums}
+.restpanel .rbar{width:min(80%,320px);height:6px;border-radius:3px;background:rgba(255,255,255,.18);overflow:hidden}
+.restpanel .rbar i{display:block;height:100%;background:var(--teal)}
+.restpanel .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.restpanel button{border:0;border-radius:14px;padding:11px 16px;font-weight:800;font-size:15px;background:rgba(255,255,255,.14);color:#fff}
+.restpanel button.skip{background:var(--accent);padding:12px 26px}
+.restpanel .nx{font-size:14px;opacity:.85}
 .runbar{background:var(--ink);color:var(--bg);border-radius:14px;padding:10px 12px;display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center}
 .runbar small{font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.75;font-weight:800}
 .runbar b{font-size:17px;font-weight:900}
@@ -272,15 +292,23 @@ h2{font-family:var(--display);font-size:13px;letter-spacing:.14em;text-transform
     <div class="stage" id="stage">
       <video id="video" playsinline muted autoplay></video>
       <canvas id="canvas"></canvas>
-      <div class="badge"><span id="setTime"></span><span id="restTime"></span><span id="halfTime" class="half"></span></div>
+      <div class="badge"><span class="phasepill" id="phasePill" hidden><i></i><span id="phaseText"></span></span><span id="setTime"></span><span id="restTime"></span><span id="halfTime" class="half"></span></div>
       <div class="count" id="count">0</div>
       <div class="stagebtns" id="stageBtns" hidden>
         <button class="ghost" id="muteBtn" type="button">Voice on</button>
         <button class="ghost" id="flipBtn" type="button">Flip</button>
-        <button class="ghost" id="stopBtn" type="button">Camera off</button>
+        <button class="ghost" id="stopBtn" type="button">Cam off</button>
       </div>
       <div class="msg" id="msg" hidden><span id="msgText"></span></div>
       <div class="meter" id="meter" hidden><b id="meterFill"></b><i id="mLo"></i><i id="mHi"></i></div>
+      <div class="readynum" id="readyNum" hidden><small>GET READY</small><span id="readyVal">5</span></div>
+      <div class="actbar" id="actBar" hidden></div>
+      <div class="restpanel" id="restPanel" hidden>
+        <small>REST</small><div class="rt" id="restVal2">1:30</div><div class="rbar"><i id="restBar"></i></div>
+        <div class="nx" id="restNext"></div>
+        <div class="row"><button type="button" data-ra="-15">−15s</button><button type="button" data-ra="pause" id="restPause">Pause</button><button type="button" data-ra="15">+15s</button></div>
+        <button type="button" class="skip" data-ra="skip">Skip rest</button>
+      </div>
       <div class="startcard" id="startCard">
         <p id="startText"></p>
         <button class="big" id="startBtn" type="button">Start camera</button>
@@ -289,7 +317,7 @@ h2{font-family:var(--display);font-size:13px;letter-spacing:.14em;text-transform
 
     <div class="optrow">
       <div class="mini" id="tgtCtl"><span>Target</span><button type="button" id="rtDown" aria-label="Lower target">−</button><b id="rtVal">Off</b><button type="button" id="rtUp" aria-label="Raise target">+</button></div>
-      <div class="mini"><span>Rest</span><button type="button" id="restDown" aria-label="Shorter rest">−</button><b id="restVal">1:30</b><button type="button" id="restUp" aria-label="Longer rest">+</button></div>
+      <div class="mini"><span>Rest for</span><button type="button" id="restDown" aria-label="Shorter rest">−</button><b id="restVal">1:30</b><button type="button" id="restUp" aria-label="Longer rest">+</button></div>
       <button class="pill" id="micBtn" type="button" aria-pressed="false">Mic</button>
     </div>
 
@@ -420,6 +448,10 @@ h2{font-family:var(--display);font-size:13px;letter-spacing:.14em;text-transform
       <div class="card">
         <div class="setting"><div><b>Count out loud</b><p>Default when you open the app. You can still mute while training.</p></div>
           <button class="switch" id="voiceDefault" role="switch" aria-checked="true" aria-label="Count out loud by default"></button></div>
+        <div class="setting"><div><b>Get-ready countdown</b><p>Seconds before counting starts, so you can put the phone down and get into position.</p></div>
+          <div class="mini"><button type="button" id="cdDown" aria-label="Shorter">−</button><b id="cdVal">5s</b><button type="button" id="cdUp" aria-label="Longer">+</button></div></div>
+        <div class="setting"><div><b>Start rest automatically</b><p>Off: after a set, tap Rest when you're ready. On: rest starts right after you save.</p></div>
+          <button class="switch" id="autoRest" role="switch" aria-checked="false" aria-label="Start rest automatically"></button></div>
         <div class="setting"><div><b>Form cues</b><p>Says "go lower", "all the way up" or "slow down", and counts half reps apart.</p></div>
           <button class="switch" id="cuesToggle" role="switch" aria-checked="true" aria-label="Form cues"></button></div>
         <div class="setting"><div><b>Start with the front camera</b><p>Off uses the back camera (sharper, but you can't see the screen).</p></div>
@@ -501,7 +533,7 @@ const CHALLENGES=[
   {id:"custom",label:"Custom",ex:null,start:10,inc:1}];
 
 /* ============ version + updates ============ */
-const APP_VERSION="1.3.0";
+const APP_VERSION="1.4.0";
 async function latestVersion(){
   const r=await fetch("./?check="+Date.now(),{cache:"no-store"});if(!r.ok)throw new Error("HTTP "+r.status);
   const m=(await r.text()).match(/const APP_VERSION="([^"]+)"/);return m?m[1]:null;
@@ -529,12 +561,12 @@ function load(){try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(e){re
 function persist(){try{localStorage.setItem(KEY,JSON.stringify({sets:S.sets,prefs:S.prefs}))}catch(e){toast("Couldn't save on this phone")}}
 const saved=load();
 const DEF={voice:true,front:true,cues:true,ex:"pushup",strict:{},custom:[],tmode:"down",target:{},rtarget:{},rest:90,cal:{},
-  workouts:null,run:null,goals:{daily:{},weekly:3},challenge:null,challengesDone:0,weights:[],lastBackup:0,badges:[],reminder:{time:"07:00",days:[1,3,5]},voiceName:"",voiceRate:1.1};
+  workouts:null,run:null,goals:{daily:{},weekly:3},challenge:null,challengesDone:0,weights:[],lastBackup:0,badges:[],reminder:{time:"07:00",days:[1,3,5]},voiceName:"",voiceRate:1.1,countdown:5,autoRest:false};
 const S={
   sets:Array.isArray(saved.sets)?saved.sets:[],
   prefs:Object.assign({},DEF,saved.prefs||{}),
   tab:"count",voice:true,running:false,facing:"user",
-  auto:0,offset:0,half:0,setStart:null,lastSave:null,restEnd:0,restSpoke:-1,repTimes:[],lastRepAt:0,beatSaid:false,targetSaid:false,
+  auto:0,offset:0,half:0,setStart:null,lastSave:null,restEnd:0,restSpoke:-1,phase:"idle",readyEnd:0,readySpoke:-1,rest:{on:false,end:0,paused:false,left:0,total:0,spoke:-1},pendingRest:0,undoId:null,undoUntil:0,repTimes:[],lastRepAt:0,beatSaid:false,targetSaid:false,
   filter:"All",range:"d",prog:"best",demo:false,confirmId:null,editId:null,confirmCustom:null,repWeek:0
 };
 for(const k of Object.keys(DEF))if(DEF[k]!==null&&(S.prefs[k]==null||typeof S.prefs[k]!==typeof DEF[k]))S.prefs[k]=JSON.parse(JSON.stringify(DEF[k]));
@@ -653,6 +685,13 @@ function sideVal(lm,metric,i){
 }
 function processReps(lm){
   const e=cur(),T=.5;let shown=null,ok=false,changed=false;
+  if(S.phase!=="active"&&!calib.on){ // not counting: still show the meter so you can line up
+    const sides=JOINTS[e.metric];
+    if(e.metric!=="lateral"&&sides){const v=[0,1].map(i=>vis(lm,sides[i])),i=v[0]>=v[1]?0:1;if(v[i]>T){ok=true;shown=sideVal(lm,e.metric,i)}}
+    else ok=true;
+    if(S.phase==="idle")showMsg(ok?"":"I can't see your "+NAMES[e.metric]+". Move back so they're in frame.");
+    drawMeter(shown);return;
+  }
   if(e.metric==="lateral"){
     if(vis(lm,["ls","rs","lw","rw","lh","rh"])>T){ok=true;
       const ls=P(lm,"ls"),rs=P(lm,"rs"),lw=P(lm,"lw"),rw=P(lm,"rw"),lh=P(lm,"lh"),rh=P(lm,"rh");
@@ -678,7 +717,6 @@ function processReps(lm){
 function onRep(){
   const now=performance.now();
   if(!S.setStart)S.setStart=Date.now();
-  S.restEnd=0;
   const n=total();
   if(S.lastRepAt){const dt=(now-S.lastRepAt)/1000;if(dt<15)S.repTimes.push(dt);
     if(S.prefs.cues&&dt<0.9&&Date.now()-lastCue>5000&&!cur().manual){lastCue=Date.now();setTimeout(()=>say("Slow down"),450)}}
@@ -690,6 +728,67 @@ function onRep(){
   const c=$("count");c.textContent=n;c.classList.remove("bump");void c.offsetWidth;c.classList.add("bump");renderControls();
 }
 const total=()=>Math.max(0,S.auto+S.offset);
+
+/* ============ set phases: idle → ready (countdown) → active ⇄ paused; rest is separate ============ */
+function camCounts(){const e=cur();return S.running&&e.kind==="reps"&&!e.manual}
+function startReady(){
+  if(S.rest.on)endRest(false,true);
+  const cd=S.prefs.countdown|0;
+  if(!cd){goActive();return}
+  S.phase="ready";S.readyEnd=Date.now()+cd*1000;S.readySpoke=-1;unlockAudio();renderStage();
+}
+function goActive(){S.phase="active";resetMachines();S.lastRepAt=0;say("Go");if(!S.voice)beep(1200);renderStage()}
+function pauseSet(){if(S.phase==="active"||S.phase==="ready"){S.phase="paused";say("Paused");renderStage()}}
+function resumeSet(){if(S.phase==="paused")startReady()}
+function tickReady(){
+  if(S.phase!=="ready")return;
+  const left=Math.ceil((S.readyEnd-Date.now())/1000);
+  if(left<=0){$("readyNum").hidden=true;goActive();return}
+  $("readyVal").textContent=left;
+  if(left!==S.readySpoke){S.readySpoke=left;if(S.voice)say(left);else beep(700)}
+}
+/* rest */
+function startRest(secs){
+  secs=Math.max(5,secs||S.prefs.rest||60);
+  if(S.phase==="active"||S.phase==="ready")S.phase="idle";
+  S.rest={on:true,end:Date.now()+secs*1000,paused:false,left:secs,total:secs,spoke:-1};S.pendingRest=0;
+  say("Rest, "+spokenTime(secs));renderStage();
+}
+function endRest(finished,silent){
+  if(!S.rest.on)return;S.rest.on=false;
+  if(!silent){if(finished){beep(1200,.2)}say(finished?"Rest over. Get ready":"Rest skipped")}
+  renderStage();
+  if(!silent&&(camCounts()))setTimeout(startReady,finished?1300:600);
+}
+function restAction(a){
+  const r=S.rest;if(!r.on)return;const now=Date.now();
+  if(a==="skip"){endRest(false);return}
+  if(a==="pause"){if(r.paused){r.paused=false;r.end=now+r.left*1000}else{r.paused=true;r.left=Math.max(1,Math.ceil((r.end-now)/1000))}}
+  else{const d=+a;if(r.paused)r.left=Math.max(5,r.left+d);else r.end=Math.max(now+5000,r.end+d*1000);r.total=Math.max(r.total,r.paused?r.left:Math.ceil((r.end-now)/1000));r.spoke=-1}
+  renderRest();
+}
+function tickRest(){
+  const r=S.rest;if(!r.on)return;
+  const left=r.paused?r.left:Math.ceil((r.end-Date.now())/1000);
+  if(left<=0){endRest(true);return}
+  if(!r.paused&&left!==r.spoke){r.spoke=left;if(left===10)say("10 seconds");else if(left<=3){beep(left===1?1000:700,.12)}}
+  renderRest(left);
+}
+function renderRest(left){
+  const r=S.rest;$("restPanel").hidden=!r.on;if(!r.on)return;
+  if(left==null)left=r.paused?r.left:Math.ceil((r.end-Date.now())/1000);
+  $("restVal2").textContent=fmtT(left);$("restBar").style.width=Math.max(0,Math.min(100,left/r.total*100))+"%";
+  $("restPause").textContent=r.paused?"Resume":"Pause";
+  const run=S.prefs.run,it=run&&run.q[run.i];$("restNext").textContent=it?"Next: "+describe(it):"";
+}
+function undoLast(){
+  const id=S.undoId;if(!id||Date.now()>S.undoUntil)return;
+  const s0=S.sets.find(s=>s.id===id);S.sets=S.sets.filter(s=>s.id!==id);S.undoId=null;persist();
+  if(S.rest.on)endRest(false,true);
+  if(s0&&s0.w&&S.prefs.run===null){}/* finished workouts stay finished */
+  else if(s0&&s0.w&&S.prefs.run&&S.prefs.run.i>0){S.prefs.run.i--;persist();setTimeout(applyRunItem,30)}
+  toast("Set removed");say("Set removed");renderCount();
+}
 
 /* ============ calibration ============ */
 function calibrate(){
@@ -730,10 +829,12 @@ const TM={running:false,armed:false,startAt:0,elapsed:0,pending:0,lostAt:0,cam:f
 const target=()=>S.prefs.target[S.prefs.ex]||60;
 function timerShown(){return S.prefs.tmode==="down"?(TM.running?target()-TM.elapsed:(TM.pending||target())):(TM.running?TM.elapsed:TM.pending)}
 function startTimer(){
-  unlockAudio();TM.pending=0;S.restEnd=0;
+  unlockAudio();TM.pending=0;
   const e=cur();
   if(S.running&&e.hold){TM.armed=true;TM.cam=true;say("Get into position");renderTimer();return}
-  TM.cam=false;let n=3;$("count").textContent=n;say("3");
+  TM.cam=false;let n=Math.max(0,S.prefs.countdown|0);if(S.rest.on)endRest(false,true);
+  if(!n){say("Go");beginTimer();return}
+  $("count").textContent=n;say(n);
   TM.pre=setInterval(()=>{n--;if(n>0){say(n);if(!S.voice)beep(600);$("count").textContent=n}else{clearInterval(TM.pre);TM.pre=0;say("Go");if(!S.voice)beep(1200);beginTimer()}},1000);
   renderTimer();
 }
@@ -793,8 +894,10 @@ function commitSet(set){
   persist();
   const rest=inRun?item.rest:S.prefs.rest;
   let next="";
-  if(inRun){next=advanceRun();if(!S.prefs.run){S.restEnd=0;return {msgs,next}}}
-  if(rest>0){S.restEnd=Date.now()+rest*1000;S.restSpoke=-1}
+  S.undoId=set.id;S.undoUntil=Date.now()+20000;S.phase="idle";
+  if(inRun){next=advanceRun();if(!S.prefs.run){S.pendingRest=0;return {msgs,next}}}
+  S.pendingRest=rest;
+  if(rest>0&&S.prefs.autoRest)setTimeout(()=>startRest(rest),1800);
   return {msgs,next};
 }
 function saveSet(){
@@ -813,7 +916,7 @@ function saveTime(prefix){
 }
 function clearSet(){S.auto=0;S.offset=0;S.half=0;S.setStart=null;S.repTimes=[];S.lastRepAt=0;S.beatSaid=false;S.targetSaid=false;resetMachines();if(cur().kind==="reps")renderControls();renderBadge()}
 function resetTimer(){if(TM.pre){clearInterval(TM.pre);TM.pre=0}clearInterval(TM.iv);Object.assign(TM,{running:false,armed:false,pending:0,cam:false,lostAt:0})}
-function selectEx(k){resetTimer();S.prefs.ex=k;persist();clearSet();showMsg("");renderCount()}
+function selectEx(k){resetTimer();S.prefs.ex=k;persist();clearSet();if(S.phase!=="idle")S.phase="idle";showMsg("");renderCount()}
 
 /* ============ workouts: guided runs ============ */
 function buildQueue(w){
@@ -829,7 +932,7 @@ function estMinutes(w){const q=buildQueue(w);let t=0;q.forEach((it,i)=>{t+=isTim
 function startWorkout(id){
   const w=S.prefs.workouts.find(x=>x.id===id);if(!w)return;
   const q=buildQueue(w);if(!q.length){toast("Add at least one exercise first");return}
-  S.prefs.run={wid:w.id,name:w.name,q,i:0,start:Date.now()};S.restEnd=0;persist();
+  S.prefs.run={wid:w.id,name:w.name,q,i:0,start:Date.now()};S.pendingRest=0;if(S.rest.on)endRest(false,true);persist();
   applyRunItem();goTab("count");unlockAudio();
   setTimeout(()=>say("Starting "+w.name+". First up, "+describe(q[0],true)),150);
 }
@@ -876,7 +979,7 @@ async function startCam(){
   $("stage").classList.toggle("mirror",S.facing==="user");
   $("startText").textContent="Loading body tracking (first time takes a few seconds)…";
   try{await loadModel()}catch(e){$("startBtn").disabled=false;$("startText").textContent="Couldn't load body tracking. Check your connection and try again.";stopCam();return}
-  S.running=true;$("startBtn").disabled=false;wake();loop();renderStage();
+  S.running=true;$("startBtn").disabled=false;wake();loop();S.phase="idle";if(camCounts()&&!S.rest.on)startReady();else renderStage();
 }
 function loop(){
   raf=requestAnimationFrame(loop);
@@ -893,7 +996,7 @@ function loop(){
   if(e.kind==="time")camHold(lm);else if(!e.manual)processReps(lm);
 }
 function stopCam(){
-  S.running=false;cancelAnimationFrame(raf);
+  S.running=false;if(S.phase!=="idle")S.phase="idle";cancelAnimationFrame(raf);
   if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
   video.srcObject=null;ctx.clearRect(0,0,canvas.width,canvas.height);
   if(TM.cam){TM.cam=false;TM.armed=false}
@@ -925,34 +1028,63 @@ function toggleMic(){
   rec.onend=()=>{if(recOn)setTimeout(()=>{try{rec.start()}catch(e){}},300)};
   rec.onerror=e=>{if(e.error==="not-allowed"||e.error==="service-not-allowed"){recOn=false;renderMic();toast("Microphone blocked. Allow it in iPhone Settings → Apps → Safari.")}};
   recOn=true;try{rec.start()}catch(e){}renderMic();unlockAudio();
-  toast("Listening: save, next, start, stop, reset, undo");
+  toast("Listening: start, save, rest, skip, pause, next");
 }
 function handleCmd(t){
   if(speechSynthesis.speaking||Date.now()-lastSpoke<700)return; // ignore Worky's own voice
   const e=cur(),has=w=>new RegExp("\\b"+w+"\\b").test(t);
   if(has("save")){if(e.kind==="time"){if(TM.running)finishTimer(false);saveTime("")}else saveSet()}
   else if(has("next"))nextExercise();
-  else if(has("start")||has("go")){if(e.kind==="time"){if(!TM.running&&!TM.armed&&!TM.pre)startTimer()}else if(!S.running)startCam()}
+  else if(has("start")||has("go")){if(e.kind==="time"){if(!TM.running&&!TM.armed&&!TM.pre)startTimer()}else if(!S.running)startCam();else if(S.phase==="idle"||S.phase==="paused")startReady()}
   else if(has("stop")){if(e.kind==="time")finishTimer(false);else if(S.running)stopCam()}
   else if(has("reset")||has("clear")){if(e.kind==="time"){resetTimer();renderTimer()}else clearSet();say("Reset")}
   else if(has("undo")||has("minus")){if(total()>0){S.offset--;renderControls();say(total())}}
   else if(has("plus")){S.offset++;renderControls();say(total())}
+  else if(has("rest")){if(!S.rest.on)startRest(S.pendingRest||S.prefs.rest)}
+  else if(has("skip")){if(S.rest.on)endRest(false);else if(S.prefs.run)skipRunItem()}
+  else if(has("pause")){if(S.rest.on)restAction("pause");else pauseSet()}
+  else if(has("resume")||has("continue")){if(S.rest.on&&S.rest.paused)restAction("pause");else resumeSet()}
 }
 function renderMic(){$("micBtn").setAttribute("aria-pressed",recOn);$("micBtn").textContent=recOn?"Mic on":"Mic"}
 
 /* ============ count screen ============ */
 function clock(){
   $("setTime").textContent=S.setStart?"SET "+fmtT((Date.now()-S.setStart)/1000):"";
-  if(S.restEnd){const left=Math.ceil((S.restEnd-Date.now())/1000);
-    if(left<=0){S.restEnd=0;$("restTime").textContent="";beep(1200,.2);say("Rest over. Go!")}
-    else{$("restTime").textContent="REST "+fmtT(left);if(left!==S.restSpoke){S.restSpoke=left;if(left===10)say("10 seconds")}}}
-  else $("restTime").textContent="";
+  tickReady();tickRest();
+  $("restTime").textContent="";
+  if(S.undoId&&Date.now()>S.undoUntil){S.undoId=null;renderActBar()}
   $("finishBtn").hidden=!currentSession().length;
 }
 setInterval(clock,250);
 function renderBadge(){$("halfTime").textContent=S.half?"HALF "+S.half:""}
+function setNumber(){const k=S.prefs.ex;return currentSession().filter(s=>s.ex===k).length+1}
+function renderPhase(){
+  const e=cur(),pill=$("phasePill");let t="",c="";
+  if(S.rest.on){t="REST";c="rd"}
+  else if(camCounts()){t=S.phase==="active"?"COUNTING · SET "+setNumber():S.phase==="ready"?"GET READY":S.phase==="paused"?"PAUSED":"NOT COUNTING";c=S.phase==="active"?"on":S.phase==="ready"?"rd":""}
+  else if(e.kind==="time"&&(TM.running||TM.pre||TM.armed)){t=TM.running?"HOLDING · SET "+setNumber():TM.armed?"GET INTO POSITION":"GET READY";c=TM.running?"on":"rd"}
+  pill.hidden=!t;pill.className="phasepill "+c;$("phaseText").textContent=t;
+  $("saveBtn").textContent=S.phase==="active"?"End set":"Save set";
+}
+function renderActBar(){
+  renderPhase();
+  const e=cur(),bar=$("actBar"),b=[];
+  if(S.rest.on){bar.hidden=true;return}
+  const canUndo=S.undoId&&Date.now()<S.undoUntil,restBtn=S.pendingRest>0?`<button type="button" class="teal" data-act="rest">Rest ${fmtT(S.pendingRest)}</button>`:"";
+  if(camCounts()){
+    if(S.phase==="idle")b.push(`<button type="button" class="go" data-act="start">${total()>0?"Continue set":S.undoId||S.lastSave?"Start next set":"Start set"}</button>`,restBtn);
+    else if(S.phase==="ready")b.push(`<button type="button" data-act="cancel">Cancel</button>`);
+    else if(S.phase==="active")b.push(`<button type="button" data-act="pause">Pause</button>`,`<button type="button" class="go" data-act="end">End set</button>`);
+    else if(S.phase==="paused")b.push(`<button type="button" class="go" data-act="resume">Resume</button>`);
+  }else if(e.kind==="time"){if(!(TM.running||TM.armed||TM.pre))b.push(restBtn)}
+  else if(e.manual||!S.running){if(S.phase!=="active")b.push(restBtn)}
+  if(canUndo&&S.phase!=="active"&&S.phase!=="ready"&&!(TM.running||TM.pre))b.push(`<button type="button" data-act="undo">Undo last set</button>`);
+  const html=b.filter(Boolean).join("");bar.innerHTML=html;bar.hidden=!html;
+}
 function renderStage(){
   const e=cur(),manual=e.kind==="reps"&&e.manual;
+  $("readyNum").hidden=S.phase!=="ready";
+  renderRest();renderActBar();
   $("stageBtns").hidden=!S.running;
   $("meter").hidden=!(S.running&&e.kind==="reps"&&!manual);
   if(manual){$("startCard").hidden=true;showMsg("Tap anywhere here to count")}
@@ -966,17 +1098,18 @@ function renderStage(){
     $("startBtn").textContent=e.kind==="time"?"Use camera":"Start camera";
     if(e.kind==="time"&&!e.hold)$("startCard").hidden=TM.pending>0;
   }
-  $("muteBtn").textContent=S.voice?"Voice on":"Muted";
+  $("muteBtn").textContent=S.voice?"Mute":"Unmute";
 }
 function renderControls(){
   const n=total(),e=cur();$("count").textContent=n;
-  $("minusBtn").disabled=n<1;$("saveBtn").disabled=n<1;
+  $("minusBtn").disabled=n<1;$("saveBtn").disabled=n<1;$("saveBtn").textContent=S.phase==="active"?"End set":"Save set";
   $("strict").value=S.prefs.strict[S.prefs.ex]||0;
   $("strictRow").hidden=!!e.manual;
   if(!calib.on)$("calBtn").textContent=S.prefs.cal[S.prefs.ex]?"Recalibrate":"Calibrate";
   const ri=runItem(),t=ri?ri.target:(S.prefs.rtarget[S.prefs.ex]||0);$("rtVal").textContent=t?t:"Off";
 }
 function renderTimer(){
+  setTimeout(renderPhase,0);
   document.querySelectorAll("[data-tm]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.tm===S.prefs.tmode));
   $("stepper").hidden=S.prefs.tmode!=="down";
   $("tTarget").textContent=fmtT(target());
@@ -1485,7 +1618,7 @@ function renderBaseOptions(){
 function renderVoicePick(){const sel=$("voicePick");if(!sel)return;const cur=pickVoice();
   sel.innerHTML=VOICES.length?VOICES.map(v=>`<option value="${esc(v.name)}" ${cur&&v.name===cur.name?"selected":""}>${esc(v.name)}${/premium|enhanced|siri/i.test(v.name)?"":" "}</option>`).join(""):`<option>Default voice</option>`;
   $("voiceRate").value=S.prefs.voiceRate||1.1}
-function renderSettings(){renderVoicePick();$("verNow").textContent="Version "+APP_VERSION;
+function renderSettings(){renderVoicePick();$("cdVal").textContent=S.prefs.countdown?S.prefs.countdown+"s":"Off";$("autoRest").setAttribute("aria-checked",!!S.prefs.autoRest);$("verNow").textContent="Version "+APP_VERSION;
   $("voiceDefault").setAttribute("aria-checked",S.prefs.voice);$("frontDefault").setAttribute("aria-checked",S.prefs.front);$("cuesToggle").setAttribute("aria-checked",S.prefs.cues);
   const L=S.prefs.custom;
   $("customList").innerHTML=L.length?L.map(c=>{const b=BUILTIN[c.base];const how=c.kind==="time"?(b?"Timed · position like "+b.name:"Timed · timer only"):(b?"Reps · counted like "+b.name:"Reps · tap to count");
@@ -1519,12 +1652,19 @@ $("muteBtn").onclick=()=>{S.voice=!S.voice;if(!S.voice)try{speechSynthesis.cance
 $("micBtn").onclick=toggleMic;
 $("calBtn").onclick=calibrate;
 $("finishBtn").onclick=()=>showSummary();
+$("actBar").addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b)return;const a=b.dataset.act;
+  if(a==="start")startReady();else if(a==="cancel"){S.phase="idle";say("Cancelled");renderStage()}
+  else if(a==="pause")pauseSet();else if(a==="resume")resumeSet();
+  else if(a==="end"){if(total()>0)saveSet();else{S.phase="idle";say("Set cancelled");renderStage()}}
+  else if(a==="rest")startRest(S.pendingRest);else if(a==="undo")undoLast()});
+$("restPanel").addEventListener("click",e=>{const b=e.target.closest("[data-ra]");if(b)restAction(b.dataset.ra)});
 $("rbSkip").onclick=skipRunItem;
 $("rbEnd").onclick=e=>{if(e.target.dataset.sure){delete e.target.dataset.sure;endRun()}else{e.target.dataset.sure=1;e.target.textContent="Sure?";setTimeout(()=>{e.target.textContent="End";delete e.target.dataset.sure},2500)}};
 $("sheet").addEventListener("click",e=>{if(e.target.id==="sheet")$("sheet").hidden=true});
 $("stage").addEventListener("click",e=>{
   if(e.target.closest("button"))return;
   const ex=cur();
+  if(S.rest.on)return;
   if(ex.kind==="reps"&&ex.manual){unlockAudio();S.offset++;onRep()}
   else if(ex.kind==="time"&&(TM.running||TM.armed||TM.pre))finishTimer(false);
 });
@@ -1572,7 +1712,7 @@ $("manualForm").addEventListener("submit",e=>{e.preventDefault();const v=parseIn
   if(!(v>0&&v<10000)){toast("Enter a number");return}
   const ex=$("manualEx").value,t=getEx(ex).kind==="time";
   commitSet(Object.assign({id:uid(),ex,n:getEx(ex).name,ts:Date.now(),manual:true},t?{kind:"time",reps:0,secs:v,dur:v}:{kind:"reps",reps:v,dur:0}));
-  S.restEnd=0;$("manualReps").value="";renderHist()});
+  S.pendingRest=0;$("manualReps").value="";renderHist()});
 $("manualEx").addEventListener("change",e=>{$("manualReps").placeholder=getEx(e.target.value).kind==="time"?"Secs":"Reps"});
 $("weightForm").addEventListener("submit",e=>{e.preventDefault();const kg=parseFloat($("weightIn").value);
   if(!(kg>=20&&kg<=300)){toast("Enter your weight in kg");return}
@@ -1602,6 +1742,10 @@ $("voicePick").onchange=e=>{S.prefs.voiceName=e.target.value;persist();const was
 $("voiceRate").oninput=e=>{S.prefs.voiceRate=+e.target.value;persist()};
 $("voiceTest").onclick=()=>{loadVoices();const was=S.voice;S.voice=true;say("3, 2, 1, go. 10. 11. 12. New record!");S.voice=was;
   setTimeout(()=>{if(!speechSynthesis.speaking&&!speechSynthesis.pending)toast("No sound? Turn off Silent mode and turn the volume up")},1200)};
+const CDS=[0,3,5,10,15];
+$("cdDown").onclick=()=>{const i=CDS.indexOf(S.prefs.countdown);S.prefs.countdown=CDS[Math.max(0,(i<0?2:i)-1)];persist();renderSettings()};
+$("cdUp").onclick=()=>{const i=CDS.indexOf(S.prefs.countdown);S.prefs.countdown=CDS[Math.min(CDS.length-1,(i<0?2:i)+1)];persist();renderSettings()};
+$("autoRest").onclick=()=>{S.prefs.autoRest=!S.prefs.autoRest;persist();renderSettings()};
 $("verCheck").onclick=()=>{if($("verCheck").dataset.go)applyUpdate();else checkUpdate(true)};
 $("updNow").onclick=applyUpdate;
 let lastAutoCheck=0;
@@ -1654,7 +1798,7 @@ let wl=null;async function wake(){try{if(navigator.wakeLock&&document.visibility
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&(S.running||TM.running))wake()});
 document.addEventListener("click",function once(){wake();document.removeEventListener("click",once)});
 
-window.__worky={S,commitSet,selectEx,showSummary,computeBadges,weeklyReport,clearSet,feedSim:(vals,side=0)=>{let hits=0;for(const v of vals){if(feed(M[side],v)){hits++;const c=autoCount();if(c!==S.auto){S.auto=c;onRep()}}}return {hits,half:S.half,total:total()}}}; // for testing
+window.__worky={processReps,startRest,restAction,endRest,startReady,goActive,undoLast,S,commitSet,selectEx,showSummary,computeBadges,weeklyReport,clearSet,feedSim:(vals,side=0)=>{let hits=0;for(const v of vals){if(feed(M[side],v)){hits++;const c=autoCount();if(c!==S.auto){S.auto=c;onRep()}}}return {hits,half:S.half,total:total()}}}; // for testing
 loadVoices();renderBaseOptions();render();setTimeout(autoCheck,2000);
 </script>
 </body>
