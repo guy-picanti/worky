@@ -58,6 +58,7 @@ select.exsel{width:100%;border:1.5px solid var(--line);background:var(--surface)
 .count.bump{animation:bump .2s ease-out}
 @keyframes bump{from{transform:scale(1.18)}to{transform:scale(1)}}
 @media (prefers-reduced-motion:reduce){.count.bump{animation:none}}
+.fps{font-family:var(--body,inherit);font-size:11px;letter-spacing:0;opacity:.6}
 .badge{position:absolute;top:56px;left:14px;display:flex;flex-direction:column;gap:4px;font-family:var(--display);font-size:17px;letter-spacing:.05em;
   text-shadow:0 1px 8px rgba(0,0,0,.7);font-variant-numeric:tabular-nums;pointer-events:none}
 .msg{position:absolute;left:12px;right:12px;bottom:100px;text-align:center;font-weight:600;font-size:15px;pointer-events:none}
@@ -292,7 +293,7 @@ h2{font-family:var(--display);font-size:13px;letter-spacing:.14em;text-transform
     <div class="stage" id="stage">
       <video id="video" playsinline muted autoplay></video>
       <canvas id="canvas"></canvas>
-      <div class="badge"><span class="phasepill" id="phasePill" hidden><i></i><span id="phaseText"></span></span><span id="setTime"></span><span id="restTime"></span><span id="halfTime" class="half"></span></div>
+      <div class="badge"><span class="phasepill" id="phasePill" hidden><i></i><span id="phaseText"></span></span><span id="setTime"></span><span id="restTime"></span><span id="halfTime" class="half"></span><span id="fps" class="fps"></span></div>
       <div class="count" id="count">0</div>
       <div class="stagebtns" id="stageBtns" hidden>
         <button class="ghost" id="muteBtn" type="button">Voice on</button>
@@ -533,7 +534,7 @@ const CHALLENGES=[
   {id:"custom",label:"Custom",ex:null,start:10,inc:1}];
 
 /* ============ version + updates ============ */
-const APP_VERSION="1.5.1";
+const APP_VERSION="1.5.2";
 async function latestVersion(){
   const r=await fetch("./?check="+Date.now(),{cache:"no-store"});if(!r.ok)throw new Error("HTTP "+r.status);
   const m=(await r.text()).match(/const APP_VERSION="([^"]+)"/);return m?m[1]:null;
@@ -710,7 +711,7 @@ let lastCue=0;
 /* Values are flipped for "low" exercises so every rep reads the same way: start below L, finish above H.
    A rep that turns back halfway is a half rep, and the matching cue is spoken. */
 function feed(m,v){
-  m.val=m.val==null?v:m.val*.5+v*.5;
+  const a=1-Math.exp(-frameDt/45);m.val=m.val==null?v:m.val*(1-a)+v*a;
   if(calib.on){calib.buf.push(m.val);return 0}
   const e=cur(),{lo,hi}=thresholds(),neg=e.count==="low";
   const y=neg?-m.val:m.val,L=neg?-hi:lo,H=neg?-lo:hi,span=H-L;
@@ -1018,20 +1019,23 @@ function nextExercise(){
 /* ============ camera + pose ============ */
 let landmarker=null,stream=null,lastT=-1,raf=0;
 const video=$("video"),canvas=$("canvas"),ctx=canvas.getContext("2d");
-async function loadModel(){
-  if(landmarker)return landmarker;
-  const {PoseLandmarker,FilesetResolver}=await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs");
-  const files=await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
-  const opts=d=>({baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task",delegate:d},
+let modelKind="full",FILES=null,lmVision=null;
+async function loadModel(kind){
+  kind=kind||modelKind;if(landmarker&&kind===modelKind)return landmarker;
+  lmVision=lmVision||await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs");
+  const {PoseLandmarker,FilesetResolver}=lmVision;
+  const files=FILES=FILES||await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
+  const opts=d=>({baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_"+kind+"/float16/1/pose_landmarker_"+kind+".task",delegate:d},
     runningMode:"VIDEO",numPoses:1,minPoseDetectionConfidence:.5,minPosePresenceConfidence:.5,minTrackingConfidence:.5});
-  try{landmarker=await PoseLandmarker.createFromOptions(files,opts("GPU"))}
-  catch(e){landmarker=await PoseLandmarker.createFromOptions(files,opts("CPU"))}
+  let lmNew;try{lmNew=await PoseLandmarker.createFromOptions(files,opts("GPU"))}
+  catch(e){lmNew=await PoseLandmarker.createFromOptions(files,opts("CPU"))}
+  const old=landmarker;landmarker=lmNew;modelKind=kind;lastTs=0;if(old)try{old.close()}catch(e){}
   return landmarker;
 }
 async function startCam(){
   unlockAudio();
   $("startBtn").disabled=true;$("startText").textContent="Starting camera…";
-  try{stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:S.facing,width:{ideal:640},height:{ideal:480}}})}
+  try{stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:S.facing,width:{ideal:480},height:{ideal:360}}})}
   catch(e){$("startBtn").disabled=false;$("startText").textContent="Camera blocked. In iPhone Settings → Apps → Safari → Camera, choose Allow, then try again.";return}
   video.srcObject=stream;await video.play().catch(()=>{});watchTrack();
   $("stage").classList.toggle("mirror",S.facing==="user");
@@ -1040,25 +1044,30 @@ async function startCam(){
   S.running=true;$("startBtn").disabled=false;wake();loop();S.phase="idle";if(camCounts()&&!S.rest.on)startReady();else renderStage();
 }
 /* Camera watchdog: if iOS pauses the video or the feed stops moving, wake it up / reopen the camera */
-let lastFrameAt=0,camFixing=false;
+let lastFrameAt=0,camFixing=false,lastReopen=0,lastTs=0,fps=0,slowSince=0,frameDt=33;
 function watchTrack(){const t=stream&&stream.getVideoTracks()[0];if(!t)return;
-  t.onended=()=>{if(S.running)reopenCam()};t.onunmute=()=>{video.play().catch(()=>{})};lastFrameAt=performance.now()}
+  t.onended=()=>{if(S.running)reopenCam()};t.onunmute=()=>{video.play().catch(()=>{})};lastFrameAt=0}
 video.addEventListener("pause",()=>{if(S.running)video.play().catch(()=>{})});
 async function reopenCam(){
-  if(camFixing||!S.running)return;camFixing=true;
+  if(camFixing||!S.running)return;camFixing=true;lastReopen=performance.now();
   try{if(stream)stream.getTracks().forEach(t=>t.stop());
-    stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:S.facing,width:{ideal:640},height:{ideal:480}}});
+    stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:S.facing,width:{ideal:480},height:{ideal:360}}});
     video.srcObject=stream;await video.play().catch(()=>{});watchTrack()}catch(e){}
-  lastFrameAt=performance.now();camFixing=false}
+  lastFrameAt=0;camFixing=false}
 function loop(){
   raf=requestAnimationFrame(loop);
   if(S.running&&!camFixing){const now=performance.now();
     if(video.paused)video.play().catch(()=>{});
-    if(lastFrameAt&&now-lastFrameAt>2500&&document.visibilityState==="visible")reopenCam()}
+    // only after frames have flowed, only if stuck 4 s, at most once per 15 s
+    if(lastFrameAt&&now-lastFrameAt>4000&&now-lastReopen>15000&&document.visibilityState==="visible")reopenCam()}
   if(!S.running||video.readyState<2||video.currentTime===lastT)return;
-  lastT=video.currentTime;lastFrameAt=performance.now();
+  lastT=video.currentTime;
+  const ts=performance.now();if(lastTs){frameDt=Math.min(250,ts-lastTs);fps=fps?fps*.9+(1000/frameDt)*.1:1000/frameDt}lastTs=ts;lastFrameAt=ts;
+  // phone falling behind with the big model? switch to the fast one (once)
+  if(modelKind==="full"&&fps&&fps<14){if(!slowSince)slowSince=ts;else if(ts-slowSince>3000&&!camFixing){slowSince=0;loadModel("lite").catch(()=>{})}}else slowSince=0;
+  if($("fps")){const t=Math.round(fps)+" fps"+(modelKind==="lite"?" · fast":"");if($("fps").textContent!==t)$("fps").textContent=t}
   if(canvas.width!==video.videoWidth){canvas.width=W=video.videoWidth;canvas.height=H=video.videoHeight}
-  let res;try{res=landmarker.detectForVideo(video,performance.now())}catch(e){return}
+  let res;try{res=landmarker.detectForVideo(video,ts)}catch(e){return}
   ctx.clearRect(0,0,W,H);
   const lm=res&&res.landmarks&&res.landmarks[0],e=cur();
   if(!lm){showMsg("Step into view. I need to see your body.");drawMeter(null);
@@ -1068,7 +1077,7 @@ function loop(){
   if(e.kind==="time")camHold(lm);else if(!e.manual)processReps(lm);
 }
 function stopCam(){
-  S.running=false;if(S.phase!=="idle")S.phase="idle";cancelAnimationFrame(raf);
+  S.running=false;lastTs=0;fps=0;lastFrameAt=0;slowSince=0;if($("fps"))$("fps").textContent="";if(S.phase!=="idle")S.phase="idle";cancelAnimationFrame(raf);
   if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
   video.srcObject=null;ctx.clearRect(0,0,canvas.width,canvas.height);
   if(TM.cam){TM.cam=false;TM.armed=false}
@@ -1084,10 +1093,10 @@ function scaleMax(){const m=cur().metric;return m==="lift"?90:m==="lateral"?1:18
 function drawMeter(v){
   const e=cur();if(e.kind!=="reps"||e.manual)return;
   const mx=scaleMax(),{lo,hi}=thresholds(),pct=x=>Math.max(0,Math.min(100,x/mx*100));
-  $("mLo").style.left=pct(lo)+"%";$("mHi").style.left=pct(hi)+"%";
-  $("meterFill").style.width=v==null?"0%":pct(v)+"%";
+  const k=lo+"|"+hi;if(k!==drawMeter.k){drawMeter.k=k;$("mLo").style.left=pct(lo)+"%";$("mHi").style.left=pct(hi)+"%"}
+  const w=v==null?"0%":pct(v).toFixed(1)+"%";if(w!==drawMeter.w){drawMeter.w=w;$("meterFill").style.width=w}
 }
-function showMsg(t){$("msg").hidden=!t;$("msgText").textContent=t}
+let _msg=null;function showMsg(t){if(t===_msg)return;_msg=t;$("msg").hidden=!t;$("msgText").textContent=t}
 
 /* ============ voice commands ============ */
 let rec=null,recOn=false;
@@ -1885,7 +1894,7 @@ let wl=null;async function wake(){try{if(navigator.wakeLock&&document.visibility
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&(S.running||TM.running)){wake();lastFrameAt=performance.now();if(video.paused)video.play().catch(()=>{})}});
 document.addEventListener("click",function once(){wake();document.removeEventListener("click",once)});
 
-window.__worky={processReps,startRest,restAction,endRest,startReady,goActive,undoLast,S,commitSet,selectEx,showSummary,computeBadges,weeklyReport,clearSet,feedSim:(vals,side=0)=>{let hits=0;for(const v of vals){if(feed(M[side],v)){hits++;const c=autoCount();if(c!==S.auto){S.auto=c;onRep()}}}return {hits,half:S.half,total:total()}}}; // for testing
+window.__worky={loadModel,processReps,startRest,restAction,endRest,startReady,goActive,undoLast,S,commitSet,selectEx,showSummary,computeBadges,weeklyReport,clearSet,feedSim:(vals,side=0)=>{let hits=0;for(const v of vals){if(feed(M[side],v)){hits++;const c=autoCount();if(c!==S.auto){S.auto=c;onRep()}}}return {hits,half:S.half,total:total()}}}; // for testing
 loadVoices();renderBaseOptions();render();setTimeout(autoCheck,2000);
 </script>
 </body>
